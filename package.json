@@ -4,7 +4,8 @@
   "description": "xFUND Solidity Smart Contract",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --exit --recursive"
+    "test": "mocha --exit --recursive",
+    "flatten": "./node_modules/.bin/poa-solidity-flattener ./contracts/XFUND.sol"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@openzeppelin/test-environment": "^0.1.4",
     "@openzeppelin/test-helpers": "^0.5.6",
+    "@poanet/solidity-flattener": "^3.0.5",
     "chai": "^4.2.0",
     "ganache-cli": "^6.10.1",
     "mocha": "^8.1.1",
