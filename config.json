@@ -1,0 +1,4 @@
+{
+    "inputFilePath": "./contracts/XFUND.sol",
+    "outputDir": "./flattened_contracts"
+}
