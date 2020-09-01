@@ -51,6 +51,31 @@ npm test
 
 ## Deploying with `ganache-cli`
 
+If `ganache-cli` is not installed, install with:
+
+```bash
+npm install -i ganache-cli
+```
+
+Run `ganache-cli` with:
+
+```bash
+npx ganache-cli --deterministic
+```
+
+The `--deterministic` flag will ensure the same keys and accounts are generated
+each time
+
+Deploy with:
+
+```bash
+npx oz deploy
+```
+
+Select `regular` deployment, `development` network, and the `xFUND` contract.
+
+The Name and Symbol are xFUND and XFUND respectively.
+
 ## Interacting with the deployed smart contract
 
 The standard ERC20 functions are available. Additionally, there are two main extended
