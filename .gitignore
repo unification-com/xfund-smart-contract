@@ -112,6 +112,7 @@ dist
 
 # Openzeppelin
 .openzeppelin/.session
+.openzeppelin/dev*
 build
 
 flattened_contracts
