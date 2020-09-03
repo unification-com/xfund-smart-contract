@@ -10,11 +10,12 @@ const { expect } = require('chai')
 
 const xFUND = contract.fromArtifact('XFUND') // Loads a compiled contract
 
-function generateTicketMsg(claimantAddr, amount, nonce) {
+function generateTicketMsg(claimantAddr, amount, nonce, contractAddress) {
   return web3.utils.soliditySha3(
       { 'type': 'address', 'value': claimantAddr},
       { 'type': 'uint256', 'value': amount.toNumber()},
-      { 'type': 'uint256', 'value': nonce}
+      { 'type': 'uint256', 'value': nonce},
+      { 'type': 'address', 'value': contractAddress}
     )
 }
 
@@ -100,7 +101,7 @@ describe('xFUND - admin', function () {
     let nonce = 1
     let amountBn = new BN(amount * (10 ** 9))
 
-    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce)
+    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce, this.xFUNDContract.address)
 
     // sign ticket with issuer1 PK
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
@@ -134,7 +135,7 @@ describe('xFUND - admin', function () {
     let lastNonce = await this.xFUNDContract.lastNonce(claimant1)
     let nonce = lastNonce.toNumber() + 1
 
-    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce)
+    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce, this.xFUNDContract.address)
 
     // sign ticket with issuer1 PK
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
@@ -165,7 +166,7 @@ describe('xFUND - admin', function () {
     expect(await this.xFUNDContract.hasRole(this.issueRole, issuer1)).to.equal(false)
 
     // issuer1 attempts to issue new ticket
-    let ticketMsg1 = generateTicketMsg(claimant1, amountBn, nonce)
+    let ticketMsg1 = generateTicketMsg(claimant1, amountBn, nonce, this.xFUNDContract.address)
 
     // sign ticket with issuer1 PK
     let ticket1 = await web3.eth.accounts.sign(ticketMsg1, issuer1Pk) 
