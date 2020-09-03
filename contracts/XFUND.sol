@@ -68,7 +68,7 @@ contract XFUND is Context, AccessControl, ERC20 {
         require(nonce == (_lastNonce[_msgSender()] + 1), "xFUND: expected nonce mismatch");
         _lastNonce[_msgSender()] = _lastNonce[_msgSender()] + 1;
 
-        bytes32 message = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_msgSender(), amount, nonce)));
+        bytes32 message = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_msgSender(), amount, nonce, address(this))));
 
         address issuer = ECDSA.recover(message, ticket);
 
