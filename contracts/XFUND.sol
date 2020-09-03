@@ -28,7 +28,7 @@ contract XFUND is Context, AccessControl, ERC20 {
     mapping(address => mapping(uint256 => bool)) _usedNonces;
     mapping(address => uint256) _lastNonce;
 
-    event TicketClaimed(address indexed claimant, address indexed issuer, bytes indexed ticket, uint256 nonce, uint256 amount);
+    event TicketClaimed(address indexed claimant, address issuer, uint256 indexed nonce, uint256 indexed amount);
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE` and `ISSUER_ROLE` to the
@@ -74,7 +74,7 @@ contract XFUND is Context, AccessControl, ERC20 {
 
         require(hasRole(ISSUER_ROLE, issuer), "xFUND: ticket invalid or issuer does not have issuer role");
 
-        emit TicketClaimed(_msgSender(), issuer, ticket, nonce, amount);
+        emit TicketClaimed(_msgSender(), issuer, nonce, amount);
 
         _mint(_msgSender(), amount);
     }
