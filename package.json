@@ -19,7 +19,8 @@
   "homepage": "https://github.com/unification-com/xFUND-Smart-Contract#readme",
   "dependencies": {
     "@openzeppelin/cli": "^2.8.2",
-    "@openzeppelin/contracts": "^3.1.0"
+    "@openzeppelin/contracts": "^3.1.0",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@openzeppelin/test-environment": "^0.1.4",
