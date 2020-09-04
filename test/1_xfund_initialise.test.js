@@ -1,7 +1,9 @@
 const { accounts, contract, web3 } = require('@openzeppelin/test-environment')
+const { v4: uuidv4 } = require("uuid")
 
 const {
   BN,           // Big Number support
+  expectRevert,
 } = require('@openzeppelin/test-helpers')
 
 const { expect } = require('chai')
@@ -12,7 +14,8 @@ describe('xFUND - initialise', function () {
   const [owner, issuer, claimant] = accounts
 
   beforeEach(async function () {
-    this.xFUNDContract = await xFUND.new("xFUND", "xFUND", {from: owner})
+    this.uuid = uuidv4()
+    this.xFUNDContract = await xFUND.new("xFUND", "xFUND", this.uuid, {from: owner})
   })
 
   it('initial total supply is zero', async function () {
@@ -38,5 +41,13 @@ describe('xFUND - initialise', function () {
   it('initial lastNonce is zero', async function () {
     expect(await this.xFUNDContract.lastNonce(claimant))
       .to.be.bignumber.equal(new BN(0))
+  })
+
+  it('fail on empty sig salt', async function () {
+    //await xFUND.new("xFUND", "xFUND", "", {from: owner})
+    await expectRevert(
+        xFUND.new("xFUND", "xFUND", "", {from: owner}),
+        "xFUND: must include sig salt"
+    )
   })
 })
