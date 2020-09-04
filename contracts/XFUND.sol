@@ -28,6 +28,8 @@ contract XFUND is Context, AccessControl, ERC20 {
     mapping(address => mapping(uint256 => bool)) _usedNonces;
     mapping(address => uint256) _lastNonce;
 
+    string private _sigSalt;
+
     event TicketClaimed(address indexed claimant, address issuer, uint256 indexed nonce, uint256 indexed amount);
 
     /**
@@ -36,9 +38,12 @@ contract XFUND is Context, AccessControl, ERC20 {
      *
      * See {ERC20-constructor}.
      */
-    constructor(string memory name, string memory symbol) public ERC20(name, symbol) {
+    constructor(string memory name, string memory symbol, string memory sigSalt) public ERC20(name, symbol) {
+        require(bytes(sigSalt).length > 0, "xFUND: must include sig salt");
         _setupDecimals(9);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+
+        _sigSalt = sigSalt;
 
         _setupRole(ISSUER_ROLE, _msgSender());
     }
@@ -68,7 +73,7 @@ contract XFUND is Context, AccessControl, ERC20 {
         require(nonce == (_lastNonce[_msgSender()] + 1), "xFUND: expected nonce mismatch");
         _lastNonce[_msgSender()] = _lastNonce[_msgSender()] + 1;
 
-        bytes32 message = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_msgSender(), amount, nonce, address(this))));
+        bytes32 message = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_msgSender(), amount, nonce, _sigSalt, address(this))));
 
         address issuer = ECDSA.recover(message, ticket);
 
@@ -84,5 +89,12 @@ contract XFUND is Context, AccessControl, ERC20 {
      */
     function lastNonce(address account) external view returns (uint256) {
         return _lastNonce[account];
+    }
+
+    /**
+     * @dev Returns the signature salt.
+     */
+    function sigSalt() public view returns (string memory) {
+        return _sigSalt;
     }
 }
