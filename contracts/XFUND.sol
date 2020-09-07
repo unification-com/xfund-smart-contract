@@ -28,9 +28,10 @@ contract XFUND is Context, AccessControl, ERC20 {
     mapping(address => mapping(uint256 => bool)) _usedNonces;
     mapping(address => uint256) _lastNonce;
 
-    string private _sigSalt;
+    bytes32 private _sigSalt;
 
     event TicketClaimed(address indexed claimant, address issuer, uint256 indexed nonce, uint256 indexed amount);
+    event SigSalt(bytes32 salt);
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE` and `ISSUER_ROLE` to the
@@ -38,11 +39,12 @@ contract XFUND is Context, AccessControl, ERC20 {
      *
      * See {ERC20-constructor}.
      */
-    constructor(string memory name, string memory symbol, string memory sigSalt) public ERC20(name, symbol) {
-        require(bytes(sigSalt).length > 0, "xFUND: must include sig salt");
+    constructor(string memory name, string memory symbol, bytes32 sigSalt) public ERC20(name, symbol) {
+        require(sigSalt[0] != 0 && sigSalt != 0x0, "xFUND: must include sig salt");
         _setupDecimals(9);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
+        emit SigSalt(sigSalt);
         _sigSalt = sigSalt;
 
         _setupRole(ISSUER_ROLE, _msgSender());
@@ -61,6 +63,8 @@ contract XFUND is Context, AccessControl, ERC20 {
      *
      * - the `ticket` must have been issued by the `ISSUER_ROLE`.
      * - the `nonce` must not have been used and must be incremented by 1.
+     * - the ticket must include the sig salt defined in the contract
+     * - the ticket must include the contract's address
      */
     function claim(uint256 amount, uint256 nonce, bytes memory ticket) external {
         require(nonce > 0, "xFUND: nonce must be greater than zero");
@@ -71,7 +75,7 @@ contract XFUND is Context, AccessControl, ERC20 {
         _usedNonces[_msgSender()][nonce] = true;
 
         require(nonce == (_lastNonce[_msgSender()] + 1), "xFUND: expected nonce mismatch");
-        _lastNonce[_msgSender()] = _lastNonce[_msgSender()] + 1;
+        _lastNonce[_msgSender()] = nonce;
 
         bytes32 message = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_msgSender(), amount, nonce, _sigSalt, address(this))));
 
@@ -92,9 +96,9 @@ contract XFUND is Context, AccessControl, ERC20 {
     }
 
     /**
-     * @dev Returns the signature salt.
+     * @dev Returns the current signature salt.
      */
-    function sigSalt() public view returns (string memory) {
+    function sigSalt() external view returns (bytes32) {
         return _sigSalt;
     }
 }
