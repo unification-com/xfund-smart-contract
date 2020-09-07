@@ -114,5 +114,6 @@ dist
 .openzeppelin/.session
 .openzeppelin/dev*
 build
+rinkeby.json
 
 flattened_contracts

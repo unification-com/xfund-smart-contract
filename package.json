@@ -19,16 +19,18 @@
   "homepage": "https://github.com/unification-com/xFUND-Smart-Contract#readme",
   "dependencies": {
     "@openzeppelin/cli": "^2.8.2",
-    "@openzeppelin/contracts": "^3.1.0",
-    "uuid": "^8.3.0"
+    "@openzeppelin/contracts": "^3.1.0"
   },
   "devDependencies": {
     "@openzeppelin/test-environment": "^0.1.4",
     "@openzeppelin/test-helpers": "^0.5.6",
     "@poanet/solidity-flattener": "^3.0.5",
+    "@truffle/hdwallet-provider": "^1.0.43",
     "chai": "^4.2.0",
+    "dotenv": "^8.2.0",
     "ganache-cli": "^6.10.1",
     "mocha": "^8.1.1",
+    "uuid": "^8.3.0",
     "web3": "^1.2.11"
   },
   "resolutions": {
