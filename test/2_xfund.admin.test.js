@@ -16,7 +16,7 @@ function generateTicketMsg(claimantAddr, amount, nonce, sigSalt, contractAddress
       { 'type': 'address', 'value': claimantAddr},
       { 'type': 'uint256', 'value': amount.toNumber()},
       { 'type': 'uint256', 'value': nonce},
-      { 'type': 'string', 'value': sigSalt},
+      { 'type': 'bytes32', 'value': sigSalt},
       { 'type': 'address', 'value': contractAddress}
     )
 }
@@ -26,8 +26,8 @@ describe('xFUND - admin', function () {
   const [ownerPk, issuer1Pk, issuer2Pk, claimant1Pk, claimant2Pk] = privateKeys
 
   beforeEach(async function () {
-    this.uuid = uuidv4()
-    this.xFUNDContract = await xFUND.new("xFUND", "xFUND", this.uuid, {from: owner})
+    this.sigSalt = web3.utils.randomHex(32)
+    this.xFUNDContract = await xFUND.new("xFUND", "xFUND", this.sigSalt, {from: owner})
     this.issueRole = web3.utils.sha3('ISSUER_ROLE')
   })
 
@@ -104,7 +104,7 @@ describe('xFUND - admin', function () {
     let nonce = 1
     let amountBn = new BN(amount * (10 ** 9))
 
-    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
 
     // sign ticket with issuer1 PK
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
@@ -138,7 +138,7 @@ describe('xFUND - admin', function () {
     let lastNonce = await this.xFUNDContract.lastNonce(claimant1)
     let nonce = lastNonce.toNumber() + 1
 
-    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
 
     // sign ticket with issuer1 PK
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
@@ -169,7 +169,7 @@ describe('xFUND - admin', function () {
     expect(await this.xFUNDContract.hasRole(this.issueRole, issuer1)).to.equal(false)
 
     // issuer1 attempts to issue new ticket
-    let ticketMsg1 = generateTicketMsg(claimant1, amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg1 = generateTicketMsg(claimant1, amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
 
     // sign ticket with issuer1 PK
     let ticket1 = await web3.eth.accounts.sign(ticketMsg1, issuer1Pk) 
