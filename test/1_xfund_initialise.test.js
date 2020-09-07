@@ -14,8 +14,8 @@ describe('xFUND - initialise', function () {
   const [owner, issuer, claimant] = accounts
 
   beforeEach(async function () {
-    this.uuid = uuidv4()
-    this.xFUNDContract = await xFUND.new("xFUND", "xFUND", this.uuid, {from: owner})
+    this.sigSalt = web3.utils.randomHex(32)
+    this.xFUNDContract = await xFUND.new("xFUND", "xFUND", this.sigSalt, {from: owner})
   })
 
   it('initial total supply is zero', async function () {
@@ -44,9 +44,8 @@ describe('xFUND - initialise', function () {
   })
 
   it('fail on empty sig salt', async function () {
-    //await xFUND.new("xFUND", "xFUND", "", {from: owner})
     await expectRevert(
-        xFUND.new("xFUND", "xFUND", "", {from: owner}),
+        xFUND.new("xFUND", "xFUND", "0x0", {from: owner}),
         "xFUND: must include sig salt"
     )
   })

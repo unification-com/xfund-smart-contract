@@ -16,7 +16,7 @@ function generateTicketMsg(claimantAddr, amount, nonce, sigSalt, contractAddress
       { 'type': 'address', 'value': claimantAddr},
       { 'type': 'uint256', 'value': amount.toNumber()},
       { 'type': 'uint256', 'value': nonce},
-      { 'type': 'string', 'value': sigSalt},
+      { 'type': 'bytes32', 'value': sigSalt},
       { 'type': 'address', 'value': contractAddress}
     )
 }
@@ -26,15 +26,15 @@ describe('xFUND - claims', function () {
   const [ownerPk, issuer1Pk, issuer2Pk, claimant1Pk, claimant2Pk] = privateKeys
 
   beforeEach(async function () {
-    this.uuid = uuidv4()
-    this.xFUNDContract = await xFUND.new("xFUND", "xFUND", this.uuid, {from: owner})
+    this.sigSalt = web3.utils.randomHex(32)
+    this.xFUNDContract = await xFUND.new("xFUND", "xFUND", this.sigSalt, {from: owner})
     this.amount = 24
     this.amountBn = new BN(this.amount * (10 ** 9))
   })
 
   it('nonce must be greater than zero', async function () {
     let nonce = 0
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
     let ticket = await web3.eth.accounts.sign(ticketMsg, ownerPk)
     await expectRevert(
        this.xFUNDContract.claim(this.amountBn.toNumber(), nonce, ticket.signature, { from: claimant1}),
@@ -45,7 +45,7 @@ describe('xFUND - claims', function () {
   it('amount must be greater than zero', async function () {
     let nonce = 1
     let zeroAmount = new BN(0)
-    let ticketMsg = generateTicketMsg(claimant1, zeroAmount, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, zeroAmount, nonce, this.sigSalt, this.xFUNDContract.address)
     let ticket = await web3.eth.accounts.sign(ticketMsg, ownerPk)
     await expectRevert(
        this.xFUNDContract.claim(zeroAmount.toNumber(), nonce, ticket.signature, { from: claimant1}),
@@ -71,7 +71,7 @@ describe('xFUND - claims', function () {
   it('claimant can claim and TicketClaimed event emitted', async function () {
     let nonce = 1
 
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
     let ticket = await web3.eth.accounts.sign(ticketMsg, ownerPk)
 
     let receipt = await this.xFUNDContract.claim(this.amountBn.toNumber(), nonce, ticket.signature, { from: claimant1})
@@ -92,7 +92,7 @@ describe('xFUND - claims', function () {
     for(let i = 0; i < 10; i += 1) {
       let lastNonce = await this.xFUNDContract.lastNonce(claimant1)
       let nonce = lastNonce.toNumber() + 1
-      let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+      let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
       let ticket = await web3.eth.accounts.sign(ticketMsg, ownerPk)
       let receipt = await this.xFUNDContract.claim(this.amountBn.toNumber(), nonce, ticket.signature, { from: claimant1})
 
@@ -114,7 +114,7 @@ describe('xFUND - claims', function () {
     // increment by 2
     let nonce = lastNonce.toNumber() + 2
 
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
 
     let ticket = await web3.eth.accounts.sign(ticketMsg, ownerPk)
     await expectRevert(
@@ -126,7 +126,7 @@ describe('xFUND - claims', function () {
   it('claimant cannot claim twice - check nonce', async function () {
     let nonce = 1
 
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
 
     let ticket = await web3.eth.accounts.sign(ticketMsg, ownerPk)
 
@@ -150,7 +150,7 @@ describe('xFUND - claims', function () {
     let dodgyAmountBn = new BN(dodgyAmount * (10 ** 9))
 
     // generate ticket for 2 xFUND
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
     let ticket = await web3.eth.accounts.sign(ticketMsg, ownerPk)
 
     // claimant attempts to claim dodgyAmount for 10 xFUND
@@ -169,7 +169,7 @@ describe('xFUND - claims', function () {
     let dodgyAmount = 10
     let dodgyAmountBn = new BN(dodgyAmount * (10 ** 9))
 
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
     let ticket = await web3.eth.accounts.sign(ticketMsg, ownerPk)
 
     // claimant2 attempts to claim claimant1's ticket
@@ -182,7 +182,7 @@ describe('xFUND - claims', function () {
   it('unauthorised issuer cannot issue - require ISSUER_ROLE role', async function () {
     let nonce = 1
 
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
 
     // issuer1 not yet authorised
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
@@ -206,7 +206,7 @@ describe('xFUND - claims', function () {
     let nonce = initialLastNonce.toNumber() + 1
 
     // generate invalid ticket - issuer1 not authorised
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
     await expectRevert(
        this.xFUNDContract.claim(this.amountBn.toNumber(), nonce, ticket.signature, { from: claimant1}),
@@ -222,7 +222,7 @@ describe('xFUND - claims', function () {
     let nonce = lastNonce.toNumber() + 1
 
     // generate invalid ticket - issuer1 not authorised
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
     await expectRevert(
        this.xFUNDContract.claim(this.amountBn.toNumber(), nonce, ticket.signature, { from: claimant1}),
@@ -254,7 +254,7 @@ describe('xFUND - claims', function () {
     let nonce = lastNonce.toNumber() + 1
 
     // generate invalid ticket - wrong contract address
-    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.uuid, issuer2)
+    let ticketMsg = generateTicketMsg(claimant1, this.amountBn, nonce, this.sigSalt, issuer2)
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
     await expectRevert(
        this.xFUNDContract.claim(this.amountBn.toNumber(), nonce, ticket.signature, { from: claimant1}),
