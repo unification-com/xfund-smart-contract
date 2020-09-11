@@ -10,10 +10,12 @@ const {
 const { expect } = require('chai')
 
 const xFUND = contract.fromArtifact('XFUND') // Loads a compiled contract
+const VALADDR = "und1x8pl6wzqf9atkm77ymc5vn5dnpl5xytmn200xy"
 
-function generateTicketMsg(claimantAddr, amount, nonce, sigSalt, contractAddress) {
+function generateTicketMsg(claimantAddr, validator, amount, nonce, sigSalt, contractAddress) {
   return web3.utils.soliditySha3(
       { 'type': 'address', 'value': claimantAddr},
+      { 'type': 'bytes32', 'value': web3.utils.soliditySha3(validator)},
       { 'type': 'uint256', 'value': amount.toNumber()},
       { 'type': 'uint256', 'value': nonce},
       { 'type': 'bytes32', 'value': sigSalt},
@@ -104,12 +106,12 @@ describe('xFUND - admin', function () {
     let nonce = 1
     let amountBn = new BN(amount * (10 ** 9))
 
-    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, VALADDR, amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
 
     // sign ticket with issuer1 PK
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
 
-    let receipt2 = await this.xFUNDContract.claim(amountBn.toNumber(), nonce, ticket.signature, { from: claimant1})
+    let receipt2 = await this.xFUNDContract.claim(amountBn.toNumber(), nonce, VALADDR, ticket.signature, { from: claimant1})
     expectEvent(receipt2, 'TicketClaimed', {
       claimant: claimant1,
       issuer: issuer1,
@@ -138,12 +140,12 @@ describe('xFUND - admin', function () {
     let lastNonce = await this.xFUNDContract.lastNonce(claimant1)
     let nonce = lastNonce.toNumber() + 1
 
-    let ticketMsg = generateTicketMsg(claimant1, amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
+    let ticketMsg = generateTicketMsg(claimant1, VALADDR, amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
 
     // sign ticket with issuer1 PK
     let ticket = await web3.eth.accounts.sign(ticketMsg, issuer1Pk)
 
-    let receipt1 = await this.xFUNDContract.claim(amountBn.toNumber(), nonce, ticket.signature, { from: claimant1})
+    let receipt1 = await this.xFUNDContract.claim(amountBn.toNumber(), nonce, VALADDR, ticket.signature, { from: claimant1})
     expectEvent(receipt1, 'TicketClaimed', {
       claimant: claimant1,
       issuer: issuer1,
@@ -169,13 +171,13 @@ describe('xFUND - admin', function () {
     expect(await this.xFUNDContract.hasRole(this.issueRole, issuer1)).to.equal(false)
 
     // issuer1 attempts to issue new ticket
-    let ticketMsg1 = generateTicketMsg(claimant1, amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
+    let ticketMsg1 = generateTicketMsg(claimant1, VALADDR, amountBn, nonce, this.sigSalt, this.xFUNDContract.address)
 
     // sign ticket with issuer1 PK
     let ticket1 = await web3.eth.accounts.sign(ticketMsg1, issuer1Pk) 
 
     await expectRevert(
-       this.xFUNDContract.claim(amountBn.toNumber(), nonce, ticket1.signature, { from: claimant1}),
+       this.xFUNDContract.claim(amountBn.toNumber(), nonce, VALADDR, ticket1.signature, { from: claimant1}),
       'xFUND: ticket invalid or issuer does not have issuer role',
     )
 
