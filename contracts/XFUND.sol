@@ -30,7 +30,24 @@ contract XFUND is Context, AccessControl, ERC20 {
 
     bytes32 private _sigSalt;
 
-    event TicketClaimed(address indexed claimant, address issuer, uint256 indexed nonce, uint256 indexed amount);
+    /**
+     * @dev Log the claim
+     *
+     * claimant - wallet address of msg.sender. Indexed
+     * valHash - sha256 hash of the validator's self-delegate address. Indexed
+     * issuer - wallet address of the ticket issuer. Indexed
+     * validator - string value of the validator's self-delegate address.
+     * nonce - nonce used for this claim
+     * amount - amount of claim
+     */
+    event TicketClaimed(
+        address indexed claimant,
+        bytes32 indexed valHash,
+        address indexed issuer,
+        string validator,
+        uint256 nonce,
+        uint256 amount
+    );
     event SigSalt(bytes32 salt);
 
     /**
@@ -65,11 +82,14 @@ contract XFUND is Context, AccessControl, ERC20 {
      * - the `nonce` must not have been used and must be incremented by 1.
      * - the ticket must include the sig salt defined in the contract
      * - the ticket must include the contract's address
+     * - the ticket must include the sha256 hash of the validator's
+     *   self-delegate address
      */
-    function claim(uint256 amount, uint256 nonce, bytes memory ticket) external {
+    function claim(uint256 amount, uint256 nonce, string memory validator, bytes memory ticket) external {
         require(nonce > 0, "xFUND: nonce must be greater than zero");
         require(amount > 0, "xFUND: amount must be greater than zero");
         require(ticket.length > 0, "xFUND: must include claim ticket");
+        require(bytes(validator).length > 0, "xFUND: must include validator");
 
         require(!_usedNonces[_msgSender()][nonce], "xFUND: nonce already used/ticket claimed");
         _usedNonces[_msgSender()][nonce] = true;
@@ -77,13 +97,15 @@ contract XFUND is Context, AccessControl, ERC20 {
         require(nonce == (_lastNonce[_msgSender()] + 1), "xFUND: expected nonce mismatch");
         _lastNonce[_msgSender()] = nonce;
 
-        bytes32 message = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_msgSender(), amount, nonce, _sigSalt, address(this))));
+        bytes32 valHash = keccak256(abi.encodePacked(validator));
+
+        bytes32 message = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_msgSender(), valHash, amount, nonce, _sigSalt, address(this))));
 
         address issuer = ECDSA.recover(message, ticket);
 
         require(hasRole(ISSUER_ROLE, issuer), "xFUND: ticket invalid or issuer does not have issuer role");
 
-        emit TicketClaimed(_msgSender(), issuer, nonce, amount);
+        emit TicketClaimed(_msgSender(), valHash, issuer, validator, nonce, amount);
 
         _mint(_msgSender(), amount);
     }
