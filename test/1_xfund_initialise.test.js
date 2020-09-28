@@ -28,8 +28,8 @@ describe('xFUND - initialise', function () {
       .to.be.bignumber.equal(new BN(0))
   })
 
-  it('only owner account should initially have ISSUER_ROLE role', async function () {
-    expect(await this.xFUNDContract.hasRole(web3.utils.sha3('ISSUER_ROLE'), owner)).to.equal(true)
+  it('no account should initially have ISSUER_ROLE role', async function () {
+    expect(await this.xFUNDContract.hasRole(web3.utils.sha3('ISSUER_ROLE'), owner)).to.equal(false)
     expect(await this.xFUNDContract.hasRole(web3.utils.sha3('ISSUER_ROLE'), issuer)).to.equal(false)
   })
 

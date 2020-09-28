@@ -63,8 +63,6 @@ contract XFUND is Context, AccessControl, ERC20 {
 
         emit SigSalt(sigSalt);
         _sigSalt = sigSalt;
-
-        _setupRole(ISSUER_ROLE, _msgSender());
     }
 
     /**
