@@ -29,7 +29,10 @@ describe('xFUND - claims', function () {
 
   beforeEach(async function () {
     this.sigSalt = web3.utils.randomHex(32)
+    this.issueRole = web3.utils.sha3('ISSUER_ROLE')
     this.xFUNDContract = await xFUND.new("xFUND", "xFUND", this.sigSalt, {from: owner})
+
+    await this.xFUNDContract.grantRole(this.issueRole, owner, { from: owner})
     this.amount = 24
     this.amountBn = new BN(this.amount * (10 ** 9))
   })
