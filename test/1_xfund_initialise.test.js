@@ -34,8 +34,8 @@ describe('xFUND - initialise', function () {
   })
 
   it('only owner account should initially have DEFAULT_ADMIN_ROLE (0x00)', async function () {
-    expect(await this.xFUNDContract.hasRole([0,0], owner)).to.equal(true)
-    expect(await this.xFUNDContract.hasRole([0,0], issuer)).to.equal(false)
+    expect(await this.xFUNDContract.hasRole("0x0", owner)).to.equal(true)
+    expect(await this.xFUNDContract.hasRole("0x0", issuer)).to.equal(false)
   })
 
   it('initial lastNonce is zero', async function () {
