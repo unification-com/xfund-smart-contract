@@ -87,4 +87,4 @@ functions, which allow for the claim ticket functionality - `claim`, and `lastNo
 
 #### Submitting a claim ticket
 
-### lastNonce
+### lastNonce https://github.com/unification-com/xfund-smart-contract/commit/47d210b032ccaa10d40c74fde0c46d7ebb8329f8
